@@ -83,7 +83,7 @@
       const submitPasswordButton = document.getElementById("submitPassword");
       const statusContent = document.getElementById("statusContent");
 
-      resetButton.addEventListener("click", async () => {
+      submitPasswordButton.addEventListener("click", async () => {
         const password = passwordInput.value;
         const response = await fetch("/api/check-status-password", {
           method: "POST",
@@ -102,20 +102,17 @@
 
       let map;
 
-      resetButton.addEventListener('click', async () => {
-            const group = groupSelect.value;
-            const password = passwordInput.value;
-            
+      resetButton.addEventListener('click', async () => {            
             try {
-                const response = await fetch('/login', {
+                const response = await fetch('/reset', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ group, password })
+                    body: JSON.stringify({})
                 });
                 const data = await response.json();
                 if (data.success) {
-                    updateUI(true);
-                    statusElement.textContent = `Logged in as ${group}`;
+                    alert(data.message);
+                    fetchLocationStatus();
                 } else {
                     statusElement.textContent = data.message;
                 }
@@ -214,7 +211,7 @@
         }
 
       // Refresh the status every 30 seconds
-      setInterval(fetchLocationStatus, 3000);
+      setInterval(fetchLocationStatus, 30000);
     </script>
   </body>
 </html>
