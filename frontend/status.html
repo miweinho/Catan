@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Location Status</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      #map {
+        height: 400px;
+        width: 100%;
+        margin-top: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      #passwordForm {
+        margin-bottom: 20px;
+      }
+      #passwordForm input,
+      #passwordForm button {
+        font-size: 16px;
+        padding: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Location Status</h1>
+    <a href="/">Back to Check Location</a>
+    <div id="passwordForm">
+      <input type="password" id="password" placeholder="Enter password" />
+      <button id="submitPassword">Submit</button>
+    </div>
+    <div id="statusContent" style="display: none">
+      <div id="menu">
+        <button onclick="fetchLocationStatus()">Refresh Status</button>
+        <button id="reset">Reset</button>
+        <button onClick="toggleAttacking()">Enable Attack</button>
+        <button onClick="revealAll()">Reveal</button>
+      </div>
+      <div id="map"></div>
+      <table id="locationTable">
+        <thead>
+          <tr>
+            <th>Location</th>
+            <th>Current Owner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Table rows will be populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      const resetButton = document.getElementById("reset");
+      const passwordForm = document.getElementById("passwordForm");
+      const passwordInput = document.getElementById("password");
+      const submitPasswordButton = document.getElementById("submitPassword");
+      const statusContent = document.getElementById("statusContent");
+
+      resetButton.addEventListener("click", async () => {
+        const password = passwordInput.value;
+        const response = await fetch("/api/check-status-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          passwordForm.style.display = "none";
+          statusContent.style.display = "block";
+          initMap();
+        } else {
+          alert("Invalid password. Please try again.");
+        }
+      });
+
+      let map;
+
+      resetButton.addEventListener('click', async () => {
+            const group = groupSelect.value;
+            const password = passwordInput.value;
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ group, password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    updateUI(true);
+                    statusElement.textContent = `Logged in as ${group}`;
+                } else {
+                    statusElement.textContent = data.message;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                statusElement.textContent = 'An error occurred during login';
+            }
+        });
+
+
+      function initMap() {
+        map = L.map("map").setView([47.3435, 9.5209], 13);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
+
+        
+
+        // Fetch location status when the page loads
+        fetchLocationStatus();
+      }
+
+      async function fetchLocationStatus() {
+          try {
+            const response = await fetch("/api/location-status");
+            console.log(response);
+            const locations = await response.json();
+            const tableBody = document.querySelector("#locationTable tbody");
+            tableBody.innerHTML = "";
+
+            map.eachLayer((layer) => {
+              if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+              }
+            });
+
+            locations.forEach((location) => {
+              const row = `
+                        <tr>
+                            <td>${location.name}</td>
+                            <td>${location.currentOwner || "Uncaptured"}</td>
+                        </tr>
+                    `;
+              tableBody.innerHTML += row;
+
+              // Function to add markers to the map
+              function addMarkerToMap(location) {
+                const owner = location.currentOwner || "Uncaptured";
+
+                function getMarkerColor(owner) {
+                  const colorMap = {
+                    "Red Team": "red",
+                    "Blue Team": "blue",
+                    "Green Team": "green",
+                    "Purple Team": "purple",
+                    "Orange Team": "orange",
+                    "Violet Team": "violet",
+                    "Yellow Team": "yellow",
+                    Uncaptured: "grey",
+                  };
+
+                  return colorMap[owner] || "black";
+                }
+
+                const customIcon = L.divIcon({
+                  className: "custom-div-icon", // You can add your own custom class if needed
+                  html: `<div style="background-color: ${getMarkerColor(owner)};
+                          width: 25px; height: 25px; border-radius: 50%; 
+                          border: 2px solid white;"></div>`,
+                  iconSize: [25, 25], // Size of the div element
+                  iconAnchor: [12, 12], // Center the icon
+                });
+                const marker = L.marker([location.lat, location.lon], {
+                  icon: customIcon,
+                }).addTo(map);
+                marker.bindPopup(
+                  `<b>${location.name}</b><br>Owner: ${
+                    location.currentOwner || "Uncaptured"
+                  }`
+                );
+              }
+
+              // Add marker to the map
+              addMarkerToMap(location);
+            });
+
+            // Adjust map view to fit all markers
+            const bounds = L.latLngBounds(
+              locations.map((loc) => [loc.lat, loc.lon])
+            );
+            map.fitBounds(bounds);
+          } catch (error) {
+            console.error("Error fetching location status:", error);
+          }
+        }
+
+      // Refresh the status every 30 seconds
+      setInterval(fetchLocationStatus, 3000);
+    </script>
+  </body>
+</html>
