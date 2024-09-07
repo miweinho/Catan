@@ -50,17 +50,13 @@
   </head>
   <body>
     <h1>Location Status</h1>
-    <a href="/">Back to Check Location</a>
-    <div id="passwordForm">
-      <input type="password" id="password" placeholder="Enter password" />
-      <button id="submitPassword">Submit</button>
-    </div>
-    <div id="statusContent" style="display: none">
+    <div id="statusContent">
       <div id="menu">
         <button onclick="fetchLocationStatus()">Refresh Status</button>
         <button id="reset">Reset</button>
-        <button onClick="toggleAttacking()">Enable Attack</button>
-        <button onClick="revealAll()">Reveal</button>
+        <button id="enableAttackButton">Enable Attack</button>
+        <button id="revealButton">Reveal</button>
+        <button id="logoutButton">Logout</button>
       </div>
       <div id="map"></div>
       <table id="locationTable">
@@ -80,27 +76,25 @@
       const resetButton = document.getElementById("reset");
       const passwordForm = document.getElementById("passwordForm");
       const passwordInput = document.getElementById("password");
-      const submitPasswordButton = document.getElementById("submitPassword");
       const statusContent = document.getElementById("statusContent");
+      const logoutButton = document.getElementById('logoutButton');
+      const revealButton = document.getElementById('revealButton');
+      const enableAttackButton = document.getElementById('enableAttackButton');
 
-      submitPasswordButton.addEventListener("click", async () => {
-        const password = passwordInput.value;
-        const response = await fetch("/api/check-status-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password }),
-        });
-        const data = await response.json();
-        if (data.success) {
-          passwordForm.style.display = "none";
-          statusContent.style.display = "block";
-          initMap();
-        } else {
-          alert("Invalid password. Please try again.");
-        }
-      });
+      
 
       let map;
+      initMap();
+
+      logoutButton.addEventListener('click', async () => {
+            try {
+                await fetch('/logout');
+                window.location.href = '/';
+                statusElement.textContent = 'Logged out successfully';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
 
       resetButton.addEventListener('click', async () => {            
             try {
@@ -209,6 +203,46 @@
             console.error("Error fetching location status:", error);
           }
         }
+
+      revealButton.addEventListener('click', async () => {
+        try {
+          const response = await fetch("/reveal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+          });
+          const data = await response.json();
+          if (data.success) {
+            alert(data.message);
+            fetchLocationStatus();
+          } else {
+            statusElement.textContent = data.message;
+          }
+        } catch (error) {
+          console.error("Reveal error:", error);
+          statusElement.textContent = "An error occurred during reveal";
+        }
+      });
+
+      enableAttackButton.addEventListener('click', async () => {
+        try {
+          const response = await fetch("/attack", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+          });
+          const data = await response.json();
+          if (data.success) {
+            alert(data.message);
+            fetchLocationStatus();
+          } else {
+            statusElement.textContent = data.message;
+          }
+        } catch (error) {
+          console.error("Reveal error:", error);
+          statusElement.textContent = "An error occurred during enable attack";
+        }
+      });
 
       // Refresh the status every 30 seconds
       setInterval(fetchLocationStatus, 30000);
