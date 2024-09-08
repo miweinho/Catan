@@ -24,7 +24,7 @@ let locations = [
     lon: 9.525444,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
   {
     name: "Fussballfeld Lagerhaus",
@@ -32,7 +32,7 @@ let locations = [
     lon: 9.513821,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
   {
     name: "Sportplatz Dorf",
@@ -40,7 +40,7 @@ let locations = [
     lon: 9.523095,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
   {
     name: "Reservoir",
@@ -48,7 +48,7 @@ let locations = [
     lon: 9.512209,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
   {
     name: "Landgasthof Hölzlisberg",
@@ -56,7 +56,7 @@ let locations = [
     lon: 9.513739,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
   {
     name: "Zoologische Station",
@@ -64,7 +64,7 @@ let locations = [
     lon: 9.525002,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
   {
     name: "Kartonfabrik",
@@ -72,7 +72,7 @@ let locations = [
     lon: 9.52177,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
   {
     name: "Heiterhof",
@@ -80,7 +80,7 @@ let locations = [
     lon: 9.525751,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
   {
     name: "Seeli Ost",
@@ -88,15 +88,17 @@ let locations = [
     lon: 9.535846,
     currentOwner: null,
     visible: false,
-    lastAttack: null,
+    lastAttack: [],
   },
 ];
 
 const maxDistance = 50; // Maximum distance in meters
 
-let attackPossible = false;
+let attackPossible = true;
 
 const generalDefense = 0.95;
+
+let attackInterval = 60000;
 
 // Define groups and their passwords (in a real app, use a database)
 const groups = {
@@ -121,6 +123,8 @@ const groups = {
   Admin: { password: "admin123", capturedLocations: [], defense: 0.95 },
 };
 
+initializeLocations();
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "frontend", "index.html"));
 });
@@ -144,7 +148,7 @@ app.post("/reset", (req, res) => {
     locations = locations.map((location) => ({
       ...location,
       currentOwner: null,
-        visible: false,
+      visible: false,
     }));
     for (const group in groups) {
       groups[group].capturedLocations = 0;
@@ -165,11 +169,11 @@ app.post("/reveal", (req, res) => {
   }
 });
 
-app.post("/attack", (req, res) => { 
-    if(req.session.group === "Admin") {
-        attackPossible = true;
-        res.json({ success: true, message: "Attack mode activated" });
-    }
+app.post("/attack", (req, res) => {
+  if (req.session.group === "Admin") {
+    attackPossible = true;
+    res.json({ success: true, message: "Attack mode activated" });
+  }
 });
 
 app.post("/login", async (req, res) => {
@@ -250,6 +254,18 @@ app.post("/api/check-location", (req, res) => {
   });
 });
 
+function initializeLocations() {
+  const attackTimeStart = Date.now() - attackInterval;
+  for (const location of locations) {
+    location.currentOwner = null;
+    location.visible = false;
+    location.lastAttack = [];
+    for (const group in groups) {
+      location.lastAttack.push({ group: group, time: attackTimeStart });
+    }
+  }
+}
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3; // Earth's radius in meters
   const φ1 = (lat1 * Math.PI) / 180;
@@ -266,42 +282,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 // Check if a group can capture a location and
 function captureLocation(group, location) {
-  if (location.currentOwner === null) {
-    if (isAttackSuccessfull(location)) {
-      location.currentOwner = group;
-      groups[group].capturedLocations.push(location);
-      location.visible = true;
-      return `Gratuliere deine Gruppe (${group}) hat die Position ${
-        location.name
-      } übernommen! Du hattest eine Chance von ${generalDefense * 100}%`;
-    } else {
-      return `Deine Gruppe (${group}) hat die Position ${
-        location.name
-      } nicht übernommen! Du hattest eine Chance von ${generalDefense * 100}%`;
-    }
+  const timeSinceLastAttack = timeSinceLastAttackAttempt(group, location);
+  if (canLocationBeCaptured(location, timeSinceLastAttack)) {
+    return changeLocationOwner(group, location);
   } else {
-    if (attackPossible) {
-      if (isAttackSuccessfull(location)) {
-        let previousOwner = groups[location.currentOwner];
-        delete groups[location.currentOwner].capturedLocations[location.name];
-        location.currentOwner = group;
-        groups[group].capturedLocations.push(location);
-        return `Gratuliere deine Gruppe (${group}) hat die Position ${
-          location.name
-        } übernommen! Du hattest eine Chance von ${
-          previousOwner.defense * 100
-        }%`;
-      } else {
-        
-        return `Deine Gruppe (${group}) hat die Position ${
-          location.name
-        } nicht übernommen! Du hattest eine Chance von ${
-          previousOwner * 100
-        }%`;
-      }
-    } else {
-      return `Die Position ${location.name} gehört bereits ${location.currentOwner}. Du kannst momentan noch nicht angreifen!`;
-    }
+    return locationChangeFailed(group, location, timeSinceLastAttack);
   }
 }
 
@@ -313,6 +298,62 @@ function isAttackSuccessfull(location) {
   }
 }
 
+function canLocationBeCaptured(location, timeSinceLastAttack) {
+  if (
+    attackPossible === false &&
+    location.currentOwner !== null &&
+    timeSinceLastAttack > attackInterval
+  ) {
+    return false;
+  } else {
+    return isAttackSuccessfull(location);
+  }
+}
+
+function timeSinceLastAttackAttempt(group, location) {
+  const lastAttack = location.lastAttack.find(
+    (attack) => attack.group === group
+  );
+  if (lastAttack) {
+    const timeDifference = Date.now() - lastAttack.time;
+    return timeDifference;
+  } else {
+    return attackInterval + 1;
+  }
+}
+
+function locationChangeFailed(group, location, timeSinceLastAttack) {
+  if (attackPossible === false) {
+    return `Du hast die Position ${location.name} nicht übernommen, die Position ist bereits von ${location.currentOwner} besetzt und kann momentan noch nicht übernommen werden.`;
+  } else {
+    let probability = generalDefense;
+    if (location.currentOwner !== null) {
+      probability = groups[location.currentOwner].defense;
+    }
+    if (timeSinceLastAttack < attackInterval) {
+      return `Du hast die Position ${
+        location.name
+      } nicht übernommen, du musst noch ${Math.round(
+        (attackInterval - timeSinceLastAttack) / 1000
+      )} Sekunden warten.`;
+    } else {
+      updateAttackAttemptEntry(group, location);
+      return `Du hast die Position ${
+        location.name
+      } nicht übernommen, du hattest eine Chance von ${probability * 100}%`;
+    }
+  }
+}
+
+function updateAttackAttemptEntry(group, location) {
+  const lastAttack = location.lastAttack.find(
+    (attack) => attack.group === group
+  );
+  lastAttack.time = Date.now();
+  console.log(location.lastAttack);
+  
+}
+
 function mapVisibleLocations(group) {
   if (group === "Admin") {
     return locations.filter((location) => location.visible);
@@ -321,6 +362,24 @@ function mapVisibleLocations(group) {
   }
 }
 
-app.listen(port, () => {
+function changeLocationOwner(group, location) {
+  updateAttackAttemptEntry(group, location);
+  let probability = generalDefense;
+  if (location.currentOwner !== null) {
+    let previousOwner = groups[location.currentOwner];
+    delete groups[location.currentOwner].capturedLocations[location.name];
+    probability = previousOwner.defense;
+  }
+  location.currentOwner = group;
+  groups[group].capturedLocations.push(location);
+  location.visible = true;
+  return `Gratuliere deine Gruppe (${group}) hat die Position ${
+    location.name
+  } übernommen! Du hattest eine Chance von ${probability * 100}%`;
+}
+
+const server = app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+module.exports = {app, server};
