@@ -52,12 +52,19 @@
     <h1>Location Status</h1>
     <div id="statusContent">
       <div id="menu">
-        <button onclick="fetchLocationStatus()">Refresh Status</button>
+        <button onclick="refresh()">Refresh Status</button>
         <button id="reset">Reset</button>
         <button id="enableAttackButton">Enable Attack</button>
         <button id="revealButton">Reveal</button>
+        <button id="startGameButton">Start Game</button>
         <button id="logoutButton">Logout</button>
+        
       </div>
+      <div>
+        <p>Timer:</p>
+        <p id="timer"></p>
+      </div>
+
       <div id="map"></div>
       <table id="locationTable">
         <thead>
@@ -76,10 +83,12 @@
       const resetButton = document.getElementById("reset");
       const passwordForm = document.getElementById("passwordForm");
       const passwordInput = document.getElementById("password");
-      const statusContent = document.getElementById("statusContent");
+      const statusElement = document.getElementById("statusContent");
       const logoutButton = document.getElementById('logoutButton');
       const revealButton = document.getElementById('revealButton');
       const enableAttackButton = document.getElementById('enableAttackButton');
+      const startGameButton = document.getElementById('startGameButton');
+      const timerElement = document.getElementById('timer');
 
       
 
@@ -96,6 +105,26 @@
             }
         });
 
+      startGameButton.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/start', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+            });
+          const data = await response.json();
+          if (data.success) {
+            alert(data.message);
+            fetchTimer();
+          } else {
+            statusElement.textContent = data.message;
+          }
+
+        } catch (error) {
+            console.error('Start game error:', error);
+            statusElement.textContent = 'An error occurred during start game';
+        }
+      })
+
       resetButton.addEventListener('click', async () => {            
             try {
                 const response = await fetch('/reset', {
@@ -106,7 +135,7 @@
                 const data = await response.json();
                 if (data.success) {
                     alert(data.message);
-                    fetchLocationStatus();
+                    fetchUIInformation();
                 } else {
                     statusElement.textContent = data.message;
                 }
@@ -127,10 +156,15 @@
         
 
         // Fetch location status when the page loads
-        fetchLocationStatus();
+        fetchUIInformation();
       }
 
-      async function fetchLocationStatus() {
+      async function refresh() {
+          await fetchUIInformation();
+          await fetchTimer();
+        }
+
+      async function fetchUIInformation() {
           try {
             const response = await fetch("/api/location-status");
             console.log(response);
@@ -214,7 +248,7 @@
           const data = await response.json();
           if (data.success) {
             alert(data.message);
-            fetchLocationStatus();
+            fetchUIInformation();
           } else {
             statusElement.textContent = data.message;
           }
@@ -234,7 +268,7 @@
           const data = await response.json();
           if (data.success) {
             alert(data.message);
-            fetchLocationStatus();
+            fetchUIInformation();
           } else {
             statusElement.textContent = data.message;
           }
@@ -244,8 +278,23 @@
         }
       });
 
+      async function fetchTimer() {
+        try {
+          const response = await fetch("/timer");
+          const data = await response.json();
+          const seconds = data.seconds < 10 ? `0${data.seconds}` : data.seconds;
+          timerElement.textContent = `${data.minutes}:${seconds}`;
+
+        } catch (error) {
+          console.error("Error fetching timer:", error);
+        }
+      }
+
       // Refresh the status every 30 seconds
-      setInterval(fetchLocationStatus, 30000);
+      setInterval(fetchUIInformation, 30000);
+
+      //Refresh the clock every 5 seconds
+      setInterval(fetchTimer, 5000);
     </script>
   </body>
 </html>

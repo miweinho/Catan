@@ -1,8 +1,10 @@
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
+var { Timer } = require("easytimer.js");
 const app = express();
 const port = process.env.PORT || 3000;
+let isRady = false;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -16,6 +18,7 @@ app.use(
   })
 );
 
+let isReady = false;
 // Define locations with ownership information
 let locations = [
   {
@@ -94,28 +97,46 @@ let locations = [
 
 const maxDistance = 50; // Maximum distance in meters
 
-let attackPossible = true;
+let attackPossible = false;
 
 const generalDefense = 0.95;
 
 let attackInterval = 60000;
 
+let minutes = 10;
+let seconds = 0;
+
+var timer = new Timer();
+
+timer.addEventListener('secondsUpdated', function (e) {
+  minutes = timer.getTimeValues().minutes;
+  seconds = timer.getTimeValues().seconds;
+  if(timer.getTimeValues().minutes === 0 && timer.getTimeValues().seconds === 0){
+    timer.stop();
+    timer.reset();
+    getRessources();
+  }
+});
+
+
 // Define groups and their passwords (in a real app, use a database)
 const groups = {
-  "Red Team": { password: "red123", capturedLocations: [], defense: 0.95 },
-  "Blue Team": { password: "blue123", capturedLocations: [], defense: 0.95 },
-  "Green Team": { password: "green123", capturedLocations: [], defense: 0.95 },
-  "Orange Team": {
+  "Red Team": { name: "Red Team", password: "red123", capturedLocations: [], defense: 0.95 },
+  "Blue Team": {name: "Blue Team", password: "blue123", capturedLocations: [], defense: 0.95 },
+  "Green Team": {name: "Green Team", password: "green123", capturedLocations: [], defense: 0.95 },
+  "Orange Team": {name: "Orange Team",
     password: "orange123",
     capturedLocations: [],
     defense: 0.95,
   },
   "Purple Team": {
+    name: "Purple Team",
     password: "purple123",
     capturedLocations: [],
     defense: 0.95,
   },
   "Yellow Team": {
+    name: "Yellow Team",
     password: "yellow123",
     capturedLocations: [],
     defense: 0.95,
@@ -141,19 +162,43 @@ app.get("/status", (req, res) => {
   }
 });
 
+app.get("/user-status", (req, res) => {
+  if(req.session.group){
+    res.json({group: groups[req.session.group], loggedIn: true, timer: {minutes: minutes, seconds: seconds}});
+  } else {
+    res.json({group: null, loggedIn: false, timer: null});
+  }
+});
+
 app.post("/reset", (req, res) => {
   if (req.session.group !== "Admin") {
     return res.status(403).json({ success: false, message: "Access denied" });
   } else {
-    locations = locations.map((location) => ({
-      ...location,
-      currentOwner: null,
-      visible: false,
-    }));
-    for (const group in groups) {
-      groups[group].capturedLocations = 0;
-    }
+    attackPossible = false;
+    initializeGroups();
+    initializeLocations();
+    timer.stop();
+    timer.reset();
+    minutes = 10;
+    seconds = 0;
     res.json({ success: true, message: "Game reset successfully" });
+  }
+});
+
+app.get("/start", (req, res) => {
+  if (req.session.group !== "Admin") {
+    return res.status(403).json({ success: false, message: "Access denied" });
+  } else {
+    startGame();
+    res.json({ success: true, message: "Game started successfully" });
+  }
+})
+
+app.get("/timer", (req, res) => {
+  if(req.session.group) {
+    res.json({minutes: minutes, seconds: seconds});
+  } else {
+    res.status(403).json({ success: false, message: "Access denied" });
   }
 });
 
@@ -222,6 +267,9 @@ app.get("/api/group-status", (req, res) => {
 });
 
 app.post("/api/check-location", (req, res) => {
+  if(!isReady) {
+    return res.status(503).json({ success: false, message: "Service not available" });
+  }
   if (!req.session.group) {
     return res.status(401).json({ success: false, message: "Not logged in" });
   }
@@ -242,15 +290,19 @@ app.post("/api/check-location", (req, res) => {
   }
 
   let message;
+  let inRange = true;
   if (shortestDistance <= maxDistance) {
     message = captureLocation(group, nearestLocation);
   } else {
     message = `Du bist nicht in der Nähe einer Position!`;
+    inRange = false;
   }
 
-  res.json({
+  res.status(200).json({
     message: message,
     location: nearestLocation,
+    inRange: inRange,
+
   });
 });
 
@@ -263,6 +315,15 @@ function initializeLocations() {
     for (const group in groups) {
       location.lastAttack.push({ group: group, time: attackTimeStart });
     }
+  }
+  isReady = true;
+}
+
+function initializeGroups() {
+  for (const group in groups) {
+    currentGroup = groups[group];
+    currentGroup.capturedLocations = [];
+    currentGroup.defense = generalDefense;
   }
 }
 
@@ -283,6 +344,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Check if a group can capture a location and
 function captureLocation(group, location) {
   const timeSinceLastAttack = timeSinceLastAttackAttempt(group, location);
+  if(group === location.currentOwner) {
+    return `Die Position ${location.name} gehört dir bereits.`;
+  }
   if (canLocationBeCaptured(location, timeSinceLastAttack)) {
     return changeLocationOwner(group, location);
   } else {
@@ -300,13 +364,13 @@ function isAttackSuccessfull(location) {
 
 function canLocationBeCaptured(location, timeSinceLastAttack) {
   if (
-    attackPossible === false &&
-    location.currentOwner !== null &&
-    timeSinceLastAttack > attackInterval
+    ((attackPossible === true ||
+    location.currentOwner === null )&&
+    (timeSinceLastAttack > attackInterval))
   ) {
-    return false;
-  } else {
     return isAttackSuccessfull(location);
+  } else {
+    return false;    
   }
 }
 
@@ -324,7 +388,7 @@ function timeSinceLastAttackAttempt(group, location) {
 
 function locationChangeFailed(group, location, timeSinceLastAttack) {
   if (attackPossible === false) {
-    return `Du hast die Position ${location.name} nicht übernommen, die Position ist bereits von ${location.currentOwner} besetzt und kann momentan noch nicht übernommen werden.`;
+    return `Du hast die Position ${location.name} nicht übernommen, die Position ist bereits von ${location.currentOwner} besetzt ist und momentan noch nicht übernommen werden kann.`;
   } else {
     let probability = generalDefense;
     if (location.currentOwner !== null) {
@@ -349,9 +413,7 @@ function updateAttackAttemptEntry(group, location) {
   const lastAttack = location.lastAttack.find(
     (attack) => attack.group === group
   );
-  lastAttack.time = Date.now();
-  console.log(location.lastAttack);
-  
+  lastAttack.time = Date.now();  
 }
 
 function mapVisibleLocations(group) {
@@ -362,7 +424,7 @@ function mapVisibleLocations(group) {
   }
 }
 
-function changeLocationOwner(group, location) {
+function changeLocationOwner(group, location, timeSinceLastAttack) {
   updateAttackAttemptEntry(group, location);
   let probability = generalDefense;
   if (location.currentOwner !== null) {
@@ -376,6 +438,15 @@ function changeLocationOwner(group, location) {
   return `Gratuliere deine Gruppe (${group}) hat die Position ${
     location.name
   } übernommen! Du hattest eine Chance von ${probability * 100}%`;
+}
+
+function startGame() {
+  timer.start({countdown: true, startValues : {seconds: 600}});
+}
+
+function getRessources() {
+  console.log("Ressourcen werden verteilt.");
+
 }
 
 const server = app.listen(port, () => {

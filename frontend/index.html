@@ -4,32 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Location Check and Takeover</title>
+
     <style>
       body {
-        font-family: Arial, sans-serif;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      select,
-      button,
-      input {
-        font-size: 16px;
-        padding: 10px;
-        margin: 10px 0;
-      }
-      #status {
-        margin-top: 20px;
-      }
-      #loginForm {
-        display: none;
-      }
-      #contentDiv {
-        display: none;
-      }
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+select,
+button,
+input {
+  font-size: 16px;
+  padding: 10px;
+  margin: 10px 0;
+}
+#status {
+  margin-top: 20px;
+}
     </style>
+    
   </head>
   <body>
+    <div><h1>Willkommen in Eichberg</h1></div>
+    <div><p id="status"></p></div>
     <div id="loginForm">
       <select id="groupSelect">
         <option value="">Loading groups...</option>
@@ -39,25 +37,30 @@
       
     </div>
 
-    <div id="contentDiv">
+    <div id="contentDiv" style="display:none">
       <p id="message"></p>
       <button id="logoutButton">Logout</button>
       <button id="checkLocation">Überprüfe aktuelle Position</button>
-      <p id="status"></p>
-      <div></div>
+      <div>
+        <p>Timer:</p>
+        <p id="timer"></p>
+      </div>
+      <div>
+        <p>Liste mit sämtlichen Standorten die deiner Gruppe gehören:</p>
         <table id="locationTable">
-            <thead>
-                <tr>
-                    <th>Standorte</th>
-              <tr>
-                <th>Location</th>
-                <th>Current Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Table rows will be populated dynamically -->
-            </tbody>
-          </table>
+          <thead>
+            <tr>
+              <th>Standort</th>
+              <th>Aktuelle Besitzer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Table rows will be populated dynamically -->
+          </tbody>
+        </table>
+
+      </div>
+        
       </div>
     </div>
 
@@ -70,8 +73,8 @@
         const checkLocationButton = document.getElementById("checkLocation");
         const statusElement = document.getElementById("status");
         const contentDiv = document.getElementById("contentDiv");
-
-        let capturedLocations = 0;
+        const messageElement = document.getElementById("message");
+        const timerElement = document.getElementById("timer");
 
         async function loadGroups() {
           try {
@@ -98,39 +101,23 @@
         }
 
         // Call the function to load the groups when the page loads
-        window.onload = loadGroups;
+        window.onload = setup;
+
+        async function setup() {
+          await loadGroups();
+          await fetchUserInformation();
+        }
 
         loginButton.addEventListener("click", async () => {
-          const group = groupSelect.value;
-          const password = passwordInput.value;
-
-          try {
-            const response = await fetch("/login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ group, password }),
-            });
-            const data = await response.json();
-            if (data.success) {
-              updateUI(true);
-              statusElement.textContent = `Logged in as ${group}`;
-              if (group === "Admin" && data.link) {
-                window.location.href = data.link;
-              }
-            } else {
-              statusElement.textContent = data.message;
-            }
-          } catch (error) {
-            console.error("Login error:", error);
-            statusElement.textContent = "An error occurred during login";
-          }
+          attemptLogin();
         });
 
         logoutButton.addEventListener("click", async () => {
           try {
             await fetch("/logout");
-            updateUI(false);
+            updateUIToLoggedOut();
             statusElement.textContent = "Logged out successfully";
+            messageElement.textContent = "";
           } catch (error) {
             console.error("Logout error:", error);
           }
@@ -151,67 +138,97 @@
                     body: JSON.stringify({ lat, lon }),
                   });
                   const data = await response.json();
-                  capturedLocations = data.capturedLocations;
-                  statusElement.innerHTML = `
+                  messageElement.innerHTML = `
                               <p>${data.message}</p>`;
-                              fetchLocationStatus();
                 } catch (error) {
-                  statusElement.textContent = `Error: ${error.message}`;
+                  messageElement.textContent = `Error: ${error.message}`;
                 }
               },
               (error) => {
-                statusElement.textContent = `Error: ${error.message}`;
+                messageElement.textContent = `Error: ${error.message}`;
               }
             );
           } else {
-            statusElement.textContent =
+            messageElement.textContent =
               "Geolocation is not supported by your browser.";
           }
         });
 
-        function updateUI(loggedIn) {
-          loginForm.style.display = loggedIn ? "none" : "block";
-          contentDiv.style.display = loggedIn ? "block" : "none";
-          if(loggedIn) {
-            fetchLocationStatus();
+        async function attemptLogin() {
+          const group = groupSelect.value;
+          const password = passwordInput.value;
+
+          try {
+            const response = await fetch("/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ group, password }),
+            });
+            const data = await response.json();
+            if(data.success) {
+              console.log(data.link);
+              if(group === "Admin") {
+                window.location.href = data.link;
+              } else {
+                updateUIToLoggedIn();
+                sessionStorage.setItem("loggedIn", true);
+                statusElement.textContent = `Wilkommen ${group}`;
+                fetchUserInformation();
+              } 
+            } else {
+              statusElement.textContent = response.message;
+            }
+            
+          } catch (error) {
+            console.error("Login error:", error);
+            statusElement.textContent = "An error occurred during login";
           }
         }
 
-        async function fetchLocationStatus() {
-          try {
-              const response = await fetch("/api/location-status");
-              console.log(response);
-              const locations = await response.json();
-              const tableBody = document.querySelector("#locationTable tbody");
-              tableBody.innerHTML = "";
+        function updateUIToLoggedIn() {
+          loginForm.style.display = "none";
+          contentDiv.style.display = "block";
+        }
 
-              locations.forEach((location) => {
-                const row = `
-                          <tr>
-                              <td>${location.name}</td>
-                              <td>${location.currentOwner || "Uncaptured"}</td>
-                          </tr>
-                      `;
-                tableBody.innerHTML += row;
-        });
-      } catch (error) {
-              console.error("Error fetching location status:", error);
-            }
+        function updateUIToLoggedOut() {
+          loginForm.style.display = "block";
+          contentDiv.style.display = "none";
+        }
+
+        function updateUserUI(data) {
+          updateTimer(data.timer);
+          updateLocationTable(data.group.capturedLocations);
+        }
+
+        function updateTimer(timer) {
+          const seconds = timer.seconds < 10 ? "0" + timer.seconds : timer.seconds;
+          timerElement.textContent = timer.minutes + ":" + seconds;
+        }
+
+        function updateLocationTable(locations) {
         }
 
         
+      // Check if user is already logged in
+        async function fetchUserInformation() {
+        const res =  await fetch("/user-status");
+        const data = await res.json();
+        const sessionLoggedIn = sessionStorage.getItem("loggedIn");
+        if (data.loggedIn === true) {
+          statusElement.textContent = `Logged in als Team ${data.group.name.split(" ")[0]}`;
+          updateUserUI(data);
+          if(sessionLoggedIn === "true") {
+            updateUIToLoggedIn();
+          }
+        } else {
+          statusElement.textContent = "Bitte anmelden:";
+          
+        }
+        
+      }
+      
 
-        // Check if user is already logged in
-        fetch("/api/check-location", { method: "POST", body: JSON.stringify({}) })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.success && data.message === "Not logged in") {
-              updateUI(false);
-            } else {
-              updateUI(true);
-            }
-          })
-          .catch((error) => console.error("Session check error:", error));
+        setInterval(fetchUserInformation, 10000);
     </script>
   </body>
 </html>
