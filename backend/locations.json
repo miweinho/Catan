@@ -6,7 +6,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 1, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 3, "stone": 1, "iron": 1, "wheat": 0}
     },
     {
         "name": "Fussballfeld Lagerhaus",
@@ -15,7 +15,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 1, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 3, "stone": 1, "iron": 0, "wheat": 1}
     },
     {
         "name": "Sportplatz Dorf",
@@ -24,7 +24,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 1, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 3, "stone": 0, "iron": 1, "wheat": 1}
     },
     {
         "name": "Reservoir",
@@ -33,7 +33,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 1, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 3, "stone": 0, "iron": 1, "wheat": 1}
     },
     {
         "name": "Landgasthof Hölzlisberg",
@@ -42,7 +42,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 0, "stone": 3, "iron": 1, "wheat": 1}
     },
     {
         "name": "Zoologische Station",
@@ -51,7 +51,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 1, "stone": 3, "iron": 1, "wheat": 0}
     },
     {
         "name": "Kartonfabrik",
@@ -60,7 +60,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 1, "stone": 3, "iron": 0, "wheat": 1}
     },
     {
         "name": "Heiterhof",
@@ -69,7 +69,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 1, "stone": 3, "iron": 1, "wheat": 0}
     },
     {
         "name": "Seeli Ost",
@@ -78,7 +78,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 1, "stone": 1, "iron": 3, "wheat": 0}
     },
     {
         "name": "Weiher West",
@@ -87,7 +87,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 0, "stone": 1, "iron": 3, "wheat": 1}
     },
     {
         "name": "Haltestelle Eichberg Süesswinkel",
@@ -96,7 +96,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 1, "stone": 0, "iron": 3, "wheat": 1}
     },
     {
         "name": "Wanderweg Büchelweg",
@@ -105,7 +105,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 1, "stone": 0, "iron": 3, "wheat": 1}
     },
     {
         "name": "Parkplatz Schulhaus",
@@ -114,7 +114,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 0, "stone": 1, "iron": 1, "wheat": 3}
     },
     {
         "name": "Spieplatz Eichberg Dorf",
@@ -123,7 +123,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 0, "stone": 1, "iron": 1, "wheat": 3}
     },
     {
         "name": "Brunnen Hinterforststrasse",
@@ -132,7 +132,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 1, "stone": 0, "iron": 1, "wheat": 3}
     },
     {
         "name": "Brücke Lattenwaldstrasse",
@@ -141,6 +141,6 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+        "ressources": { "wood": 1, "stone": 1, "iron": 0, "wheat": 3}
     }
 ]

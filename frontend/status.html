@@ -69,13 +69,15 @@
       <table id="locationTable">
         <thead>
           <tr>
-            <th>Location</th>
-            <th>Current Owner</th>
+            <th>Standort</th>
+            <th>Aktuelle Besitzer</th>
+            <th>Ressourcen</th>
           </tr>
         </thead>
         <tbody>
           <!-- Table rows will be populated dynamically -->
         </tbody>
+        <p>Erklärung: 🪵 = Holz, 🪨 = Stein, 🛢️ = Eisen, 🌾 = Weizen</p>
       </table>
     </div>
 
@@ -177,7 +179,7 @@
                 map.removeLayer(layer);
               }
             });
-            console.log(locations);
+            
 
             locations.forEach((location) => {
               const row = `
@@ -220,8 +222,8 @@
                 }).addTo(map);
                 marker.bindPopup(
                   `<b>${location.name}</b><br>Owner: ${
-                    location.currentOwner || "Uncaptured"
-                  }`
+                    location.currentOwner || "Uncaptured"}
+                    <br>Ressourcen: ${createRessourcesText(location.ressources)}`
                 );
               }
               
@@ -290,6 +292,26 @@
         } catch (error) {
           console.error("Error fetching timer:", error);
         }
+      }
+
+      function createRessourcesText(locationRessources) {
+        let ressourcesText = "";
+        for (const [ressource, amount] of Object.entries(locationRessources)) {
+          if (amount > 0) {
+        ressourcesText += `${mapRessourceToText(ressource)}: ${amount}`;
+          }
+        }
+        return ressourcesText;
+      }
+
+      function mapRessourceToText(ressource) {
+        const ressourceMap = {
+          "wood": "🪵",
+          "stone": "🪨",
+          "iron": "🛢️",
+          "wheat": "🌾",
+        };
+        return ressourceMap[ressource] || "Unknown";
       }
 
       // Refresh the status every 30 seconds

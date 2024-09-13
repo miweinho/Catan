@@ -59,14 +59,17 @@ input {
         <p>Liste mit sämtlichen Standorten die deiner Gruppe gehören:</p>
         <table id="locationTable">
           <thead>
+            
             <tr>
               <th>Standort</th>
               <th>Aktuelle Besitzer</th>
+              <th>LokaleRessourcen</th>
             </tr>
           </thead>
           <tbody>
             <!-- Table rows will be populated dynamically -->
           </tbody>
+          <p>Erklärung: 🪵 = Holz, 🪨 = Stein, 🛢️ = Eisen, 🌾 = Weizen</p>
         </table>
 
       </div>
@@ -218,7 +221,6 @@ input {
         }
 
         function updateLocationTable(locations) {
-          console.log(locations);
           const tbody = locationTable.querySelector("tbody");
           tbody.innerHTML = "";
           locations.forEach((location) => {
@@ -227,13 +229,16 @@ input {
             locationCell.textContent = location.name;
             const ownerCell = document.createElement("td");
             ownerCell.textContent = location.currentOwner;
+            const ressourcesCell = document.createElement("td");
+            ressourcesCell.innerHTML = createRessourcesText(location.ressources);
             row.appendChild(locationCell);
             row.appendChild(ownerCell);
-            console.log(ownerCell);
+            row.appendChild(ressourcesCell);
             tbody.appendChild(row);
           });
 
         }
+
 
         
       // Check if user is already logged in
@@ -252,6 +257,26 @@ input {
           
         }
         
+      }
+
+      function createRessourcesText(locationRessources) {
+        let ressourcesText = "";
+        for (const [ressource, amount] of Object.entries(locationRessources)) {
+          if (amount > 0) {
+        ressourcesText += `${mapRessourceToText(ressource)}: ${amount}`;
+          }
+        }
+        return ressourcesText;
+      }
+
+      function mapRessourceToText(ressource) {
+        const ressourceMap = {
+          "wood": "🪵",
+          "stone": "🪨",
+          "iron": "🛢️",
+          "wheat": "🌾",
+        };
+        return ressourceMap[ressource] || "Unknown";
       }
       
 
