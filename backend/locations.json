@@ -1,0 +1,146 @@
+[
+    {
+        "name": "Kirche Eichberg",
+        "lat": 47.346416,
+        "lon": 9.525444,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 1, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Fussballfeld Lagerhaus",
+        "lat": 47.342758,
+        "lon": 9.513821,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 1, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Sportplatz Dorf",
+        "lat": 47.345082,
+        "lon": 9.523095,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 1, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Reservoir",
+        "lat": 47.342513,
+        "lon": 9.512209,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 1, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Landgasthof Hölzlisberg",
+        "lat": 47.34504,
+        "lon": 9.513739,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Zoologische Station",
+        "lat": 47.347345,
+        "lon": 9.525002,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Kartonfabrik",
+        "lat": 47.339972,
+        "lon": 9.52177,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Heiterhof",
+        "lat": 47.344916,
+        "lon": 9.525751,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Seeli Ost",
+        "lat": 47.345663,
+        "lon": 9.535846,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Weiher West",
+        "lat": 47.339406,
+        "lon": 9.518589,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Haltestelle Eichberg Süesswinkel",
+        "lat": 47.342852,
+        "lon": 9.517569,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Wanderweg Büchelweg",
+        "lat": 47.343833,
+        "lon": 9.519902,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Parkplatz Schulhaus",
+        "lat": 47.344557,
+        "lon": 9.523072,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Spieplatz Eichberg Dorf",
+        "lat": 47.346069,
+        "lon": 9.523881,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Brunnen Hinterforststrasse",
+        "lat": 47.348225,
+        "lon": 9.523567,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    },
+    {
+        "name": "Brücke Lattenwaldstrasse",
+        "lat": 47.341330,
+        "lon": 9.516096,
+        "currentOwner": null,
+        "visible": false,
+        "lastAttack": [],
+        "ressources": { "wood": 0, "stone": 0, "iron": 0, "wheat": 0}
+    }
+]

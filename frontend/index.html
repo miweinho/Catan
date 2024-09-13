@@ -22,6 +22,16 @@ input {
 #status {
   margin-top: 20px;
 }
+#locationTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#locationTable th,
+#locationTable td {
+  border: 1px solid black;
+  text-align: center;
+}
     </style>
     
   </head>
@@ -75,6 +85,7 @@ input {
         const contentDiv = document.getElementById("contentDiv");
         const messageElement = document.getElementById("message");
         const timerElement = document.getElementById("timer");
+        const locationTable = document.getElementById("locationTable");
 
         async function loadGroups() {
           try {
@@ -140,6 +151,7 @@ input {
                   const data = await response.json();
                   messageElement.innerHTML = `
                               <p>${data.message}</p>`;
+                  fetchUserInformation();
                 } catch (error) {
                   messageElement.textContent = `Error: ${error.message}`;
                 }
@@ -197,7 +209,7 @@ input {
 
         function updateUserUI(data) {
           updateTimer(data.timer);
-          updateLocationTable(data.group.capturedLocations);
+          updateLocationTable(data.locations);
         }
 
         function updateTimer(timer) {
@@ -206,6 +218,21 @@ input {
         }
 
         function updateLocationTable(locations) {
+          console.log(locations);
+          const tbody = locationTable.querySelector("tbody");
+          tbody.innerHTML = "";
+          locations.forEach((location) => {
+            const row = document.createElement("tr");
+            const locationCell = document.createElement("td");
+            locationCell.textContent = location.name;
+            const ownerCell = document.createElement("td");
+            ownerCell.textContent = location.currentOwner;
+            row.appendChild(locationCell);
+            row.appendChild(ownerCell);
+            console.log(ownerCell);
+            tbody.appendChild(row);
+          });
+
         }
 
         
@@ -215,7 +242,7 @@ input {
         const data = await res.json();
         const sessionLoggedIn = sessionStorage.getItem("loggedIn");
         if (data.loggedIn === true) {
-          statusElement.textContent = `Logged in als Team ${data.group.name.split(" ")[0]}`;
+          statusElement.textContent = `Logged in als Team ${data.group.split(" ")[0]}`;
           updateUserUI(data);
           if(sessionLoggedIn === "true") {
             updateUIToLoggedIn();

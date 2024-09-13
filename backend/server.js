@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const session = require("express-session");
 var { Timer } = require("easytimer.js");
+const fs = require("fs");
 const app = express();
 const port = process.env.PORT || 3000;
 let isRady = false;
@@ -18,82 +19,16 @@ app.use(
   })
 );
 
+let publicLocations = [];
+
+const ressourceTypes = ["wood", "stone", "iron", "wheat"];
+
 let isReady = false;
 // Define locations with ownership information
-let locations = [
-  {
-    name: "Kirche Eichberg",
-    lat: 47.346416,
-    lon: 9.525444,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-  {
-    name: "Fussballfeld Lagerhaus",
-    lat: 47.342758,
-    lon: 9.513821,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-  {
-    name: "Sportplatz Dorf",
-    lat: 47.345082,
-    lon: 9.523095,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-  {
-    name: "Reservoir",
-    lat: 47.342513,
-    lon: 9.512209,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-  {
-    name: "Landgasthof Hölzlisberg",
-    lat: 47.34504,
-    lon: 9.513739,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-  {
-    name: "Zoologische Station",
-    lat: 47.347345,
-    lon: 9.525002,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-  {
-    name: "Kartonfabrik",
-    lat: 47.339972,
-    lon: 9.52177,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-  {
-    name: "Heiterhof",
-    lat: 47.344916,
-    lon: 9.525751,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-  {
-    name: "Seeli Ost",
-    lat: 47.345663,
-    lon: 9.535846,
-    currentOwner: null,
-    visible: false,
-    lastAttack: [],
-  },
-];
+let locations = [];
+let groups = [];
+initializeData();
+
 
 const maxDistance = 50; // Maximum distance in meters
 
@@ -119,31 +54,6 @@ timer.addEventListener('secondsUpdated', function (e) {
 });
 
 
-// Define groups and their passwords (in a real app, use a database)
-const groups = {
-  "Red Team": { name: "Red Team", password: "red123", capturedLocations: [], defense: 0.95 },
-  "Blue Team": {name: "Blue Team", password: "blue123", capturedLocations: [], defense: 0.95 },
-  "Green Team": {name: "Green Team", password: "green123", capturedLocations: [], defense: 0.95 },
-  "Orange Team": {name: "Orange Team",
-    password: "orange123",
-    capturedLocations: [],
-    defense: 0.95,
-  },
-  "Purple Team": {
-    name: "Purple Team",
-    password: "purple123",
-    capturedLocations: [],
-    defense: 0.95,
-  },
-  "Yellow Team": {
-    name: "Yellow Team",
-    password: "yellow123",
-    capturedLocations: [],
-    defense: 0.95,
-  },
-  Admin: { password: "admin123", capturedLocations: [], defense: 0.95 },
-};
-
 initializeLocations();
 
 app.get("/", (req, res) => {
@@ -164,7 +74,7 @@ app.get("/status", (req, res) => {
 
 app.get("/user-status", (req, res) => {
   if(req.session.group){
-    res.json({group: groups[req.session.group], loggedIn: true, timer: {minutes: minutes, seconds: seconds}});
+    res.json({group: groups[req.session.group].name, loggedIn: true, timer: {minutes: minutes, seconds: seconds}, locations: publicLocations});
   } else {
     res.json({group: null, loggedIn: false, timer: null});
   }
@@ -175,10 +85,10 @@ app.post("/reset", (req, res) => {
     return res.status(403).json({ success: false, message: "Access denied" });
   } else {
     attackPossible = false;
-    initializeGroups();
-    initializeLocations();
+    initializeData();    
+    updateVisibleLocations();
     timer.stop();
-    timer.reset();
+    
     minutes = 10;
     seconds = 0;
     res.json({ success: true, message: "Game reset successfully" });
@@ -300,18 +210,39 @@ app.post("/api/check-location", (req, res) => {
 
   res.status(200).json({
     message: message,
-    location: nearestLocation,
     inRange: inRange,
 
   });
 });
 
+function readFileAsync(filePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, "utf8", (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
+async function initializeData() {
+  try {
+    const groupsData = await readFileAsync("groups.json");
+    groups = JSON.parse(groupsData);
+
+    const locationsData = await readFileAsync("locations.json");
+    locations = JSON.parse(locationsData);
+    initializeLocations();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 function initializeLocations() {
   const attackTimeStart = Date.now() - attackInterval;
   for (const location of locations) {
-    location.currentOwner = null;
-    location.visible = false;
-    location.lastAttack = [];
     for (const group in groups) {
       location.lastAttack.push({ group: group, time: attackTimeStart });
     }
@@ -319,12 +250,16 @@ function initializeLocations() {
   isReady = true;
 }
 
-function initializeGroups() {
-  for (const group in groups) {
-    currentGroup = groups[group];
-    currentGroup.capturedLocations = [];
-    currentGroup.defense = generalDefense;
-  }
+function updateVisibleLocations() {
+  let currentVisibleLocations = locations.filter((location) => location.visible);
+  currentVisibleLocations = JSON.parse(JSON.stringify(currentVisibleLocations));
+  currentVisibleLocations.forEach((location) => {
+    delete location.lat;
+    delete location.lon;
+    delete location.lastAttack;
+    delete location.visible;
+  });
+  publicLocations = currentVisibleLocations;
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -435,6 +370,7 @@ function changeLocationOwner(group, location, timeSinceLastAttack) {
   location.currentOwner = group;
   groups[group].capturedLocations.push(location);
   location.visible = true;
+  updateVisibleLocations();
   return `Gratuliere deine Gruppe (${group}) hat die Position ${
     location.name
   } übernommen! Du hattest eine Chance von ${probability * 100}%`;

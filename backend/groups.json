@@ -1,0 +1,9 @@
+{
+    "Red Team": { "name": "Red Team", "password": "red123", "capturedLocations": [], "defense": 0.95 },
+    "Blue Team": {"name": "Blue Team", "password": "blue123", "capturedLocations": [], "defense": 0.95 },
+    "Green Team": {"name": "Green Team", "password": "green123", "capturedLocations": [], "defense": 0.95 },
+    "Orange Team": {"name": "Orange Team", "password": "orange123", "capturedLocations": [], "defense": 0.95 },
+    "Purple Team": {"name": "Purple Team", "password": "purple123", "capturedLocations": [], "defense": 0.95 },
+    "Yellow Team": {"name": "Yellow Team", "password": "yellow123", "capturedLocations": [], "defense": 0.95 },
+    "Admin": {"password": "admin123", "capturedLocations": [], "defense": 0.95 }
+}

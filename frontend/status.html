@@ -177,6 +177,7 @@
                 map.removeLayer(layer);
               }
             });
+            console.log(locations);
 
             locations.forEach((location) => {
               const row = `
@@ -223,6 +224,7 @@
                   }`
                 );
               }
+              
 
               // Add marker to the map
               addMarkerToMap(location);
