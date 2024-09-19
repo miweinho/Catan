@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payout</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      select,
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Payout</h2>
+      <div class="form-group">
+        <label for="group">Wähle Gruppe:</label>
+        <select id="groupSelect">
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+      <button onclick="orderPayout()">Order Payout</button>
+      <div><p id="status"><br></p><p id="ressourceDisplay"></p>
+      </div>
+    </div>
+
+    <script>
+      window.onload = loadGroups;
+
+      async function loadGroups() {
+        try {
+          // Fetch the groups from the backend API
+          const response = await fetch("/groups");
+          const groups = await response.json(); // Assuming it returns an array of group names
+
+          // Get the select element by ID
+          const selectElement = document.getElementById("groupSelect");
+
+          // Clear any previous options
+          selectElement.innerHTML = "";
+
+          // Populate the select element with groups
+          groups.forEach((group) => {
+            const option = document.createElement("option");
+            option.value = group; // Set the value of the option
+            option.textContent = group; // Set the displayed text of the option
+            selectElement.appendChild(option); // Add the option to the select element
+          });
+        } catch (error) {
+          console.error("Error loading groups:", error);
+        }
+      }
+
+      async function orderPayout() {
+        const groupSelect = document.getElementById("groupSelect");
+        const selectedGroup = groupSelect.value;
+        const statusElement = document.getElementById("status");
+        const ressourceDisplay = document.getElementById("ressourceDisplay");
+
+        try {
+          const response = await fetch("/payout-confirmed", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ selectedGroup }),
+          });
+          const data = await response.json();
+          if (data.success) {
+            ressourceDisplay.textContent = createRessourcesText(data.ressources);
+            
+          } 
+          statusElement.textContent = data.message;
+        } catch (error) {
+          console.error("Error ordering payout:", error);
+        }
+      }
+
+      function createRessourcesText(locationRessources) {
+        let ressourcesText = "";
+        for (const [ressource, amount] of Object.entries(locationRessources)) {
+          if (amount > 0) {
+        ressourcesText += `${mapRessourceToText(ressource)}: ${amount}`;
+          }
+        }
+        return ressourcesText;
+      }
+
+      function mapRessourceToText(ressource) {
+        const ressourceMap = {
+          "wood": "🪵",
+          "stone": "🪨",
+          "iron": "🛢️",
+          "wheat": "🌾",
+        };
+        return ressourceMap[ressource] || "Unknown";
+      }
+    </script>
+  </body>
+</html>

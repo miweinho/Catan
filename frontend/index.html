@@ -73,6 +73,23 @@ input {
         </table>
 
       </div>
+
+      <div>
+        <h3>Unsere Ressourcen:</h3>
+        <table id="ressourceTable">
+          <thead>
+            
+            <tr>
+              <th>Typ:</th>
+              <th>Anzahl:</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Table rows will be populated dynamically -->
+          </tbody>
+        </table>
+
+      </div>
         
       </div>
     </div>
@@ -89,6 +106,7 @@ input {
         const messageElement = document.getElementById("message");
         const timerElement = document.getElementById("timer");
         const locationTable = document.getElementById("locationTable");
+        const ressourceTable = document.getElementById("ressourceTable");
 
         async function loadGroups() {
           try {
@@ -213,6 +231,7 @@ input {
         function updateUserUI(data) {
           updateTimer(data.timer);
           updateLocationTable(data.locations);
+          createOwnedRessourceTable(data.ressources);
         }
 
         function updateTimer(timer) {
@@ -257,6 +276,21 @@ input {
           
         }
         
+      }
+
+      function createOwnedRessourceTable(ressources) {
+        const tbody = ressourceTable.querySelector("tbody");
+        tbody.innerHTML = "";
+        for (const [ressource, amount] of Object.entries(ressources)) {
+          const row = document.createElement("tr");
+          const ressourceCell = document.createElement("td");
+          ressourceCell.textContent = mapRessourceToText(ressource);
+          const amountCell = document.createElement("td");
+          amountCell.textContent = amount;
+          row.appendChild(ressourceCell);
+          row.appendChild(amountCell);
+          tbody.appendChild(row);
+        }
       }
 
       function createRessourcesText(locationRessources) {

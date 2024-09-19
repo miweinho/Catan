@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verteidigung</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      select,
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Verteidigung</h2>
+      <div class="form-group">
+        <label for="group">Wähle Gruppe:</label>
+        <select id="groupSelect">
+          <!-- Options will be populated dynamically -->
+        </select>
+        <button onclick="getCurrentBuildings()">Aktuelle Verteidigung für Gruppe anzeigen</button>
+        <label>Verteidigungsgebäude</label>
+        <select id="defenseSelect"></select>
+      </div>
+      <button onclick="changeDefense()">Passe Verteidigung an.</button>
+      <div><p id="status"><br></p><p id="ressourceDisplay"></p>
+      </div>
+    </div>
+
+    <script>
+      window.onload = setup;
+
+      async function setup() {
+        await loadGroups();
+        await loadDefenseBuildings();
+      }
+
+      async function loadGroups() {
+        try {
+          // Fetch the groups from the backend API
+          const response = await fetch("/groups");
+          const groups = await response.json(); // Assuming it returns an array of group names
+
+          // Get the select element by ID
+          const selectElement = document.getElementById("groupSelect");
+
+          // Clear any previous options
+          selectElement.innerHTML = "";
+
+          // Populate the select element with groups
+          groups.forEach((group) => {
+            const option = document.createElement("option");
+            option.value = group; // Set the value of the option
+            option.textContent = group; // Set the displayed text of the option
+            selectElement.appendChild(option); // Add the option to the select element
+          });
+        } catch (error) {
+          console.error("Error loading groups:", error);
+        }
+      }
+
+      async function loadDefenseBuildings() {
+        try {
+          // Fetch the groups from the backend API
+          const response = await fetch("/defenseBuildings");
+          const buildings = await response.json(); // Assuming it returns an array of group names
+
+          // Get the select element by ID
+          const selectElement = document.getElementById("defenseSelect");
+
+          // Clear any previous options
+          selectElement.innerHTML = "";
+
+          // Populate the select element with groups
+          buildings.forEach((building) => {
+            const option = document.createElement("option");
+            option.value = building.defenseStrength; // Set the value of the option
+            option.textContent = building.name; // Set the displayed text of the option
+            selectElement.appendChild(option); // Add the option to the select element
+          });
+        } catch (error) {
+          console.error("Error loading groups:", error);
+        }
+      }
+
+      async function getCurrentBuildings() {
+        try {
+          const groupSelect = document.getElementById("groupSelect");
+          const selectedGroup = groupSelect.value;
+          const ressourceDisplay = document.getElementById("ressourceDisplay");
+          const response = await fetch("/builtBuildings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ selectedGroup: selectedGroup })
+          });
+          const data = await response.json();
+          ressourceDisplay.textContent = data.message;
+
+        } catch (error) {
+          console.log("Error getting current buildings:", error);
+        }
+
+      }
+
+      async function changeDefense() {
+        const groupSelect = document.getElementById("groupSelect");
+        const selectedGroup = groupSelect.value;
+        const defenseSelect = document.getElementById("defenseSelect");
+        const defenseStrength = defenseSelect.value;
+        const defenseBuilding = defenseSelect.options[defenseSelect.selectedIndex].text;
+        const statusElement = document.getElementById("status");
+        const ressourceDisplay = document.getElementById("ressourceDisplay");
+
+        try {
+          const response = await fetch("/defense-confirmed", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ selectedGroup: selectedGroup, defenseBuilding: defenseBuilding })
+          });
+          const data = await response.json();
+          statusElement.textContent = data.message;
+        } catch (error) {
+          console.error("Error changing defense:", error);
+        }
+      }
+    </script>
+  </body>
+</html>

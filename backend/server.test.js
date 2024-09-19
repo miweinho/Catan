@@ -13,25 +13,25 @@ describe("Catan Backend API", () => {
         agent2 = request.agent(app);
     });
 
-    afterAll((done) => {
-        server.close(done);
+    afterAll(async() => {
+        await new Promise(resolve => server.close(resolve));
     });
 
     async function loginAgents() {
             await agent.post("/login").send({
-                group: "Red Team",
+                group: "Rot",
                 password: "red123",
             });
 
             await agent2.post("/login").send({
-                group: "Blue Team",
+                group: "Blau",
                 password: "blue123",
             });
 
             agent3 = request.agent(app);
             await agent3.post("/login").send({
                 group: "Admin",
-                password: "admin123",
+                password: "",
             });
     }
 
@@ -39,9 +39,9 @@ describe("Catan Backend API", () => {
     async function resetServerState() {
         await agent.post("/login").send({
             group: "Admin",
-            password: "admin123",
+            password: "",
         });
-        await agent.post("/reset");
+        await agent.get("/reset");
         await agent.get("/logout");
     }
 
@@ -54,12 +54,12 @@ describe("Catan Backend API", () => {
             const res = await agent.get("/groups");
             expect(res.statusCode).toEqual(200);
             expect(res.body).toEqual([
-                "Red Team",
-                "Blue Team",
-                "Green Team",
-                "Orange Team",
-                "Purple Team",
-                "Yellow Team",
+                "Rot",
+                "Blau",
+                "Gruen",
+                "Orange",
+                "Violett",
+                "Gelb",
                 "Admin",
             ]);
         });
@@ -68,7 +68,7 @@ describe("Catan Backend API", () => {
     describe("POST /login", () => {
         it("should login as a group", async () => {
             const res = await agent.post("/login").send({
-                group: "Red Team",
+                group: "Rot",
                 password: "red123",
             });
             expect(res.statusCode).toEqual(200);
@@ -80,7 +80,7 @@ describe("Catan Backend API", () => {
 
         it("should fail to login with invalid credentials", async () => {
             const res = await agent.post("/login").send({
-                group: "Red Team",
+                group: "Rot",
                 password: "wrongpassword",
             });
             expect(res.statusCode).toEqual(401);
@@ -92,15 +92,12 @@ describe("Catan Backend API", () => {
     });
 
     describe("Admin operations", () => {
-        beforeEach(async () => {
-            await agent.post("/login").send({
-                group: "Admin",
-                password: "admin123",
-            });
-        });
 
         it("should reset the game if logged in as Admin", async () => {
-            const res = await agent.post("/reset");
+            await loginAgents();
+            const log = await agent3.get("/user-status")
+            const res = await agent3.get("/reset");
+            console.log(log.body);
             expect(res.statusCode).toEqual(200);
             expect(res.body).toEqual({
                 success: true,
@@ -109,7 +106,8 @@ describe("Catan Backend API", () => {
         });
 
         it("should reveal locations if logged in as Admin", async () => {
-            const res = await agent.post("/reveal");
+            await loginAgents();
+            const res = await agent3.get("/reveal");
             expect(res.statusCode).toEqual(200);
             expect(res.body).toEqual({
                 success: true,
@@ -118,7 +116,8 @@ describe("Catan Backend API", () => {
         });
 
         it("should activate attack mode if logged in as Admin", async () => {
-            const res = await agent.post("/attack");
+            await loginAgents();
+            const res = await agent3.get("/attack");
             expect(res.statusCode).toEqual(200);
             expect(res.body).toEqual({
                 success: true,
@@ -130,13 +129,13 @@ describe("Catan Backend API", () => {
     describe("Non-admin operations", () => {
         beforeEach(async () => {
             await agent.post("/login").send({
-                group: "Red Team",
+                group: "Rot",
                 password: "red123",
             });
         });
 
         it("should deny reset if not logged in as Admin", async () => {
-            const res = await agent.post("/reset");
+            const res = await agent.get("/reset");
             expect(res.statusCode).toEqual(403);
             expect(res.body).toEqual({
                 success: false,
@@ -145,7 +144,7 @@ describe("Catan Backend API", () => {
         });
 
         it("should deny reveal if not logged in as Admin", async () => {
-            const res = await agent.post("/reveal");
+            const res = await agent.get("/reveal");
             expect(res.statusCode).toEqual(403);
             expect(res.body).toEqual({
                 success: false,
@@ -179,13 +178,13 @@ describe("Catan Backend API", () => {
 
         it("should login a user and send a location that is correct. The answer should be positive.", async () => {
             await agent.post("/login").send({
-                group: "Red Team",
+                group: "Rot",
                 password: "red123",
             });
 
             const res = await agent.post("/api/check-location").send(correctLocation);
             expect(res.statusCode).toEqual(200);
-            expect(res.body.message).toEqual("Gratuliere deine Gruppe (Red Team) hat die Position Kirche Eichberg übernommen! Du hattest eine Chance von 95%");
+            expect(res.body.message).toEqual("Gratuliere deine Gruppe (Rot) hat die Position Kirche Eichberg übernommen! Du hattest eine Chance von 95%");
         });
 
         it("creates a second user. logs both users in and when the second user tries to check the location, he should not get it.", async() =>{
@@ -205,7 +204,7 @@ describe("Catan Backend API", () => {
 
             await agent.post("/api/check-location").send(correctLocation);
 
-            await agent3.post("/attack");
+            await agent3.get("/attack");
 
             await agent2.post("/api/check-location").send(correctLocation);
 
@@ -220,7 +219,7 @@ describe("Catan Backend API", () => {
 
         it("should login 1 user and try to retake a location already taken by the same user. The answer should be negative.", async() =>{
             await agent.post("/login").send({
-                group: "Red Team",
+                group: "Rot",
                 password: "red123",
             });
 
