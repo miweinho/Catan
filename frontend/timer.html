@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Timer</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      select,
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Timer</h2>
+      <div class="form-group">
+        <label for="group">Gebe neue Zeit in Sekunden ein:</label>
+        <input type="number" id="timeInput" />
+      </div>
+      <button onclick="changeTimer()">Order Payout</button>
+      <div><p id="status"><br></p><p id="ressourceDisplay"></p>
+      </div>
+    </div>
+
+    <script>
+
+      async function changeTimer() {
+        const timeInput = document.getElementById("timeInput").value;
+        const statusElement = document.getElementById("status");
+
+        try {
+          const response = await fetch("/setTimer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ seconds: timeInput }),
+          });
+          const data = await response.json();
+          if (data.success) {
+            ressourceDisplay.textContent = data.message;
+          } 
+          statusElement.textContent = data.message;
+        } catch (error) {
+          console.error("Error ordering payout:", error);
+        }
+      }
+    </script>
+  </body>
+</html>

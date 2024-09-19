@@ -60,6 +60,10 @@
         <button id="logoutButton">Logout</button>
         <button id="payoutButton">Payout</button>
         <button id="defenseButton">Defense</button>
+        <button id="timerButton">Timer anpassen</button>
+        <div id="timerForm" style="display: none">
+          <iframe src="/alternateTimer" style="width: 100%; height: 400px"></iframe>
+        </div>
         <div id="defenseForm" style="display: none">
           <iframe src="/defense" style="width: 100%; height: 400px"></iframe>
         </div>
@@ -102,7 +106,7 @@
       const payoutForm = document.getElementById("payoutForm");
       const defenseButton = document.getElementById("defenseButton");
       const defenseForm = document.getElementById("defenseForm");
-      
+      const timerButton = document.getElementById("timerButton");
 
       let map;
       initMap();
@@ -125,6 +129,10 @@
       defenseButton.addEventListener("click", () => {
         defenseForm.style.display =
           defenseForm.style.display === "none" ? "block" : "none";
+      });
+
+      timerButton.addEventListener("click", () => {
+        timerForm.style.display = timerForm.style.display === "none" ? "block" : "none";
       });
 
       startGameButton.addEventListener("click", async () => {

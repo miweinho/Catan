@@ -36,6 +36,7 @@ let isReady = false;
 // Define locations with ownership information
 let locations = [];
 let groups = [];
+let timePerRound = 600;
 initializeData();
 
 const maxDistance = 50; // Maximum distance in meters
@@ -108,7 +109,7 @@ app.get("/reset", async (req, res) => {
         await initializeData();
         await updateVisibleLocations();
         timer.stop();
-
+        timePerRound = 600;
         minutes = 10;
         seconds = 0;
         return res.json({ success: true, message: "Game reset successfully" });
@@ -156,6 +157,8 @@ app.get("/attack", (req, res) => {
   if (req.session.group === "Admin") {
     attackPossible = true;
     res.json({ success: true, message: "Attack mode activated" });
+  } else {
+    res.status(403).json({ success: false, message: "Access denied" });
   }
 });
 
@@ -178,6 +181,18 @@ app.post("/login", async (req, res) => {
   }
 });
 
+app.post("/setTimer", (req, res) => {
+  if (req.session.group === "Admin") {
+    const seconds = req.body.seconds;
+    timer.stop();
+    timer.start({ countdown: true, startValues: { seconds } });
+    res.json({ success: true, message: "Timer set successfully to : " + seconds + " seconds" });
+  } else {
+    res.status(403).json({ success: false, message: "Access denied" });
+  }
+
+});
+
 app.get("/logout", (req, res) => {
   req.session.destroy();
   res.json({ success: true, message: "Logged out successfully" });
@@ -194,6 +209,14 @@ app.get("/payout", (req, res) => {
 app.get("/defense", (req, res) => {
   if (req.session.group === "Admin") {
     res.sendFile(path.join(__dirname, "..", "frontend", "defense.html"));
+  } else {
+    res.status(403).json({ success: false, message: "Access denied" });
+  }
+});
+
+app.get("/alternateTimer", (req, res) => {
+  if (req.session.group === "Admin") {
+    res.sendFile(path.join(__dirname, "..", "frontend", "timer.html"));
   } else {
     res.status(403).json({ success: false, message: "Access denied" });
   }
@@ -518,7 +541,7 @@ function changeLocationOwner(group, location, timeSinceLastAttack) {
 }
 
 function startGame() {
-  timer.start({ countdown: true, startValues: { seconds: 10 } });
+  timer.start({ countdown: true, startValues: { seconds: timePerRound } });
 }
 
 function buildDefenseBuilding(group, defenseBuilding) {
