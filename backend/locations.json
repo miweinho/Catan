@@ -60,7 +60,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 1, "stone": 3, "iron": 0, "wheat": 1}
+        "ressources": { "wood": 2, "stone": 3, "iron": 0, "wheat": 2}
     },
     {
         "name": "Heiterhof",
@@ -78,7 +78,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 1, "stone": 1, "iron": 3, "wheat": 0}
+        "ressources": { "wood": 2, "stone": 2, "iron": 4, "wheat": 0}
     },
     {
         "name": "Weiher West",
