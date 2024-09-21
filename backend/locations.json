@@ -72,22 +72,13 @@
         "ressources": { "wood": 1, "stone": 3, "iron": 1, "wheat": 0}
     },
     {
-        "name": "Seeli Ost",
-        "lat": 47.345663,
-        "lon": 9.535846,
-        "currentOwner": null,
-        "visible": false,
-        "lastAttack": [],
-        "ressources": { "wood": 2, "stone": 2, "iron": 4, "wheat": 0}
-    },
-    {
         "name": "Weiher West",
         "lat": 47.339406,
         "lon": 9.518589,
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 0, "stone": 1, "iron": 3, "wheat": 1}
+        "ressources": { "wood": 1, "stone": 2, "iron": 3, "wheat": 1}
     },
     {
         "name": "Haltestelle Eichberg Süesswinkel",
@@ -132,7 +123,7 @@
         "currentOwner": null,
         "visible": false,
         "lastAttack": [],
-        "ressources": { "wood": 1, "stone": 0, "iron": 1, "wheat": 3}
+        "ressources": { "wood": 1, "stone": 1, "iron": 2, "wheat": 4}
     },
     {
         "name": "Brücke Lattenwaldstrasse",
